@@ -26,3 +26,28 @@ func GbkToUtf8(data []byte) ([]byte, error) {
 	}
 	return d, nil
 }
+
+// 结构体转XML
+func XMLEncode(data any) ([]byte, error) {
+	data, err := xml.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	byteData, ok := data.([]byte)
+
+	if !ok {
+		return nil, err
+	}
+
+	return byteData, nil
+}
+
+// 可封装通用XML生成函数（放置于utils包中）
+func XMLEncodeWithHeader(v interface{}, header string) ([]byte, error) {
+	data, err := XMLEncode(v)
+	if err != nil {
+		return nil, err
+	}
+	return append([]byte(header), data...), nil
+}

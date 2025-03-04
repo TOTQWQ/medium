@@ -33,9 +33,9 @@ func (t *UDPTransport) Send(addr string, msg []byte) error {
 	return err
 }
 
-func (t *UDPTransport) Listen(handler func(msg []byte, addr string)) error {
+func (t *UDPTransport) Listen(port int, handler func(msg []byte, addr string)) error {
 	// 解析 UDP 地址，监听本地 5060 端口
-	udpAddr, err := net.ResolveUDPAddr("udp", ":5060")
+	udpAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return err
 	}
@@ -65,6 +65,6 @@ func (t *UDPTransport) Listen(handler func(msg []byte, addr string)) error {
 	}()
 
 	// 返回 nil 表示监听成功
-	fmt.Println("-----------开始监听------------")
+	fmt.Printf("-----------开始监听端口：%d------------\r\n", port)
 	return nil
 }
