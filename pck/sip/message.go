@@ -46,14 +46,20 @@ func ParseMessage(data []byte) (*Message, error) {
 	if parts[0] == "SIP/2.0" {
 		// 响应消息
 		msg.IsRequest = false
-		fmt.Println("响应消息: " + string(data))
+		msg.URI = parts[1]
+		msg.Version = parts[0]
+		if len(parts) > 3 {
+			msg.Method = Method(parts[2] + " " + parts[3])
+		} else {
+			msg.Method = Method(parts[2])
+		}
 	} else {
 		// 请求消息
 		msg.IsRequest = true
 		msg.Method = Method(parts[0])
 		msg.URI = parts[1]
+		msg.Version = parts[2]
 	}
-	msg.Version = parts[2]
 
 	// 解析头部
 	for {
