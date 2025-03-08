@@ -1,4 +1,4 @@
-package pck
+package pcksip
 
 import (
 	"bufio"
@@ -17,6 +17,7 @@ const (
 	MethodAck      Method = "ACK"      // 应答
 	MethodBye      Method = "BYE"      // 挂断
 	MethodMessage  Method = "MESSAGE"  // 消息
+	MethodOK       Method = "OK"       // 消息
 )
 
 // SIP 消息结构
@@ -146,4 +147,26 @@ func NewRegisterFailResponse(msg *Message) *Message {
 		},
 	}
 	return response
+}
+
+func NewQueryRequest() string {
+	return `
+MESSAGE sip:37070000081118000001@192.168.2.188:5060 SIP/2.0
+To: <sip:37070000081118000001@192.168.2.188:5060>
+From: <sip:34020000002000000001@192.168.2.158:5060>;tag=90650094
+Call-ID: 11ec6335-eaec-4c71-b631-f08d114abae40
+CSeq: 1332667738 MESSAGE
+Max-Forwards: 70
+Via: SIP/2.0/UDP 192.168.2.158:5060;branch=z9hG4bK0x7fab61e50400385148953;rport
+User-Agent: zdww sip server
+Content-Type: Application/MANSCDP+xml
+Content-Length: 139
+
+<?xml version="1.0" encoding="GB2312"?>
+<Query>
+<CmdType>Catalog</CmdType>
+<SN>1708</SN>
+<DeviceID>37070000081118000001</DeviceID>
+</Query>
+`
 }

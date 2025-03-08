@@ -1,4 +1,4 @@
-package pck
+package pcksip
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ func HandlerRequest(addr string, msg *Message, udp *UDPTransport) {
 		fmt.Println("接受到注册请求")
 		fmt.Println("注册信息：" + msg.String())
 		is_response = true
-	case MethodMessage:
+	case MethodMessage: // 消息
 		fmt.Println("接收到消息")
 		message := &MessageReceive{}
 		if err := utils.XMLDecode([]byte(msg.Body), message); err != nil {
@@ -42,10 +42,15 @@ func HandlerRequest(addr string, msg *Message, udp *UDPTransport) {
 			case "Keepalive":
 				is_response = true
 				// fmt.Println(msg.String())
+			case "Catalog":
+				fmt.Println(msg.String())
+				is_response = true
 			default:
 				fmt.Println("Unsupported message type:", message.CmdType)
 			}
 		}
+	case MethodOK:
+		fmt.Println("OK: " + msg.String())
 	default:
 		// fmt.Println("Unsupported method:", msg.Method)
 		fmt.Println("Unsupported method: " + msg.String())

@@ -1,4 +1,4 @@
-package pck
+package pcksip
 
 import (
 	"crypto/md5"
