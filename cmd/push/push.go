@@ -2,12 +2,26 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
+	"strconv"
+
+	pcksip "github.com/totqwq/medium/pck/sip"
+	"github.com/totqwq/medium/utils"
+)
+
+var (
+	passageway = "34020000001318000105"
+	device_ip  = "192.168.2.105:5060"
+	sip_ip     = "192.168.2.115:5060"
+	sip_id     = "34020000002000000001"
+	domain     = "3402000000"
+	sip_user   = "34020000001188000009"
 )
 
 func main() {
 	fmt.Println("----------开始推流--------------")
-	conn, err := net.Dial("udp", "192.168.2.188:5060")
+	conn, err := net.Dial("udp", device_ip)
 
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -15,77 +29,68 @@ func main() {
 	}
 	defer conn.Close()
 
-	// 	body := `v=0
-	// o=37070000081118000001 0 0 IN IP4 192.168.2.158
-	// s=Play
-	// c=IN IP4 192.168.2.158
-	// t=0 0
-	// m=video 43001 TCP/RTP/AVP 96 98 97
-	// a=recvonly
-	// a=setup:passive
-	// a=connection:new
-	// a=rtpmap:96 PS/90000
-	// a=rtpmap:98 H264/90000
-	// a=rtpmap:97 MPEG4/90000
-	// a=stream:main
-	// a=streamnumber:0
-	// y=0000059682`
+	ssrc := "0000059682"
 
-	// 	to_sip := "sip:37070000081118000001@192.168.2.188:5060"
-	// 	contact_sip := "<sip:34020000002000000001@192.168.2.158:5060>"
-	// 	inviteMessage := &pcksip.Message{
-	// 		Method:    pcksip.MethodInvite,
-	// 		URI:       to_sip,
-	// 		Version:   "SIP/2.0",
-	// 		IsRequest: true,
-	// 		Headers: map[string]string{
-	// 			"Via":            "SIP/2.0/UDP 192.168.2.158:5060;branch=z9hG4bK0x7f1bcc056800753269171;rport",
-	// 			"From":           fmt.Sprintf("%s;tag=957224978", contact_sip),
-	// 			"To":             fmt.Sprintf("<%s>", to_sip),
-	// 			"Call-ID":        "cfc3d61c-20b5-4bdb-8e33-ff9f8cde911b0",
-	// 			"CSeq":           "46311 INVITE",
-	// 			"Max-Forwards":   "70",
-	// 			"Contact":        contact_sip,
-	// 			"User-Agent":     "zdww sip server",
-	// 			"Subject":        "37070000081118000001:59682,34020000002000000001:0",
-	// 			"Content-Type":   "Application/SDP",
-	// 			"Content-Length": strconv.Itoa(len(body)),
-	// 		},
-	// 		Body: string(body),
-	// 	}
+	body := &utils.SDP{
+		Version: "0",
+		Origin: utils.Origin{
+			Username:       sip_user,
+			SessionID:      "0",
+			SessionVersion: "0",
+			NetworkType:    "IN",
+			AddressType:    "IP4",
+			Address:        sip_ip,
+		},
+		SessionName: "Play",
+		Connection: utils.Connection{
+			NetworkType: "IN",
+			AddressType: "IP4",
+			Address:     sip_ip,
+		},
+		Timing: utils.Timing{
+			Start: 0,
+			Stop:  0,
+		},
+		MediaDescriptions: []utils.MediaDescription{
+			{
+				MediaType: "video",
+				Port:      32014,
+				Protocol:  "TCP/RTP/AVP",
+				Formats:   []string{"96", "97", "98", "99"},
+				Attributes: []string{
+					"recvonly", "rtpmap:96 PS/90000", "rtpmap:98 H264/90000",
+					"rtpmap:97 MPEG4/90000", "rtpmap:99 H265/90000",
+					"setup:passive", "connection:new",
+				},
+			},
+		},
+		SSRC: ssrc,
+	}
 
-	// 	fmt.Println(inviteMessage.String())
+	inviteMessage := &pcksip.Message{
+		Method:    pcksip.MethodInvite,
+		URI:       fmt.Sprintf("sip:%s@%s", passageway, device_ip),
+		Version:   "SIP/2.0",
+		IsRequest: true,
+		Headers: map[string]string{
+			"Via":            fmt.Sprintf("SIP/2.0/UDP %s;rport;branch=z9hG4bK%s", sip_ip, strconv.Itoa(rand.Intn(1000000))),
+			"From":           fmt.Sprintf("<sip:%s@%s>;tag=%s", sip_id, domain, strconv.Itoa(rand.Intn(1000000))),
+			"To":             fmt.Sprintf("<%s@%s>", passageway, device_ip),
+			"Call-ID":        fmt.Sprintf("%s@192.168.2.158", strconv.Itoa(rand.Intn(1000000))),
+			"CSeq":           "20 INVITE",
+			"Max-Forwards":   "70",
+			"Contact":        fmt.Sprintf("<sip:%s@%s>", sip_id, sip_ip),
+			"User-Agent":     "zdww sip server",
+			"Subject":        fmt.Sprintf("%s:%s,%s:%s", passageway, ssrc, sip_id, "0"),
+			"Content-Type":   "Application/SDP",
+			"Content-Length": strconv.Itoa(len(body.String())),
+		},
+		Body: body.String(),
+	}
 
-	inviteMessage := `INVITE sip:37070000081118000001@192.168.2.188:5060 SIP/2.0
-To: <sip:37070000081118000001@192.168.2.188:5060>
-From: <sip:34020000002000000001@192.168.2.158:5060>;tag=957224978
-Call-ID: cfc3d61c-20b5-4bdb-8e33-ff9f8cde911b0
-CSeq: 199946311 INVITE
-Max-Forwards: 70
-Via: SIP/2.0/UDP 192.168.2.158:5060;branch=z9hG4bK0x7f1bcc056800753269171;rport
-Contact: <sip:34020000002000000001@192.168.2.158:5060>
-User-Agent: zdww sip server
-Subject: 37070000081118000001:59682,34020000002000000001:0
-Content-Type: Application/SDP
-Content-Length: 294
+	fmt.Println(inviteMessage.String())
 
-v=0
-o=37070000081118000001 0 0 IN IP4 192.168.2.158
-s=Play
-c=IN IP4 192.168.2.158
-t=0 0
-m=video 43001 TCP/RTP/AVP 96 98 97
-a=recvonly
-a=setup:passive
-a=connection:new
-a=rtpmap:96 PS/90000
-a=rtpmap:98 H264/90000
-a=rtpmap:97 MPEG4/90000
-a=stream:main
-a=streamnumber:0
-y=0000059682`
-
-	_, err = conn.Write([]byte(inviteMessage))
+	_, err = conn.Write([]byte(inviteMessage.String()))
 	if err != nil {
 		fmt.Println("Error:", err)
 		return

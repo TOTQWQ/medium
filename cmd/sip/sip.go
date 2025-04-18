@@ -1,6 +1,8 @@
 package sip
 
 import (
+	"fmt"
+
 	"github.com/totqwq/medium/global"
 	pcksip "github.com/totqwq/medium/pck/sip"
 )
@@ -17,5 +19,12 @@ func UDPListen() {
 			global.Addr = addr
 			pcksip.HandlerRequest(addr, sipmsg, global.UDPTransport)
 		}
+	})
+}
+
+func TCPListen() {
+	global.TCPTransport = pcksip.NewTCPTransport()
+	global.TCPTransport.Listen(9000, func(msg []byte, addr string) {
+		fmt.Println("tcp:", string(msg))
 	})
 }

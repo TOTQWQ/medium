@@ -20,8 +20,17 @@ type UDPTransport struct {
 	conn *net.UDPConn
 }
 
+// TCP 传输实现
+type TCPTransport struct {
+	conn *net.TCPConn
+}
+
 func NewUDPTransport() *UDPTransport {
 	return &UDPTransport{}
+}
+
+func NewTCPTransport() *TCPTransport {
+	return &TCPTransport{}
 }
 
 func (t *UDPTransport) Send(addr string, msg []byte) error {
@@ -67,4 +76,34 @@ func (t *UDPTransport) Listen(port int, handler func(msg []byte, addr string)) e
 	// 返回 nil 表示监听成功
 	fmt.Printf("-----------开始监听端口：%d------------\r\n", port)
 	return nil
+}
+
+func (t *TCPTransport) Listen(port int, handler func(data []byte, addr string)) error {
+	tcpAddr, err := net.ResolveTCPAddr("udp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		return err
+	}
+	listener, err := net.ListenTCP("udp", tcpAddr)
+	if err != nil {
+		return err
+	}
+	defer listener.Close()
+
+	fmt.Printf("-----------开始监听TCP端口：%d------------\r\n", port)
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			return err
+		}
+		go func() {
+			defer conn.Close()
+			buf := make([]byte, 1024)
+			n, err := conn.Read(buf)
+			if err != nil {
+				return
+			}
+			handler(buf[:n], conn.RemoteAddr().String())
+		}()
+	}
 }

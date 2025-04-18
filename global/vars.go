@@ -8,4 +8,6 @@ var (
 	UDPTransport *pcksip.UDPTransport
 	Message      *pcksip.Message
 	Addr         string
+	TCPTransport *pcksip.TCPTransport
+	TCPMessage   *pcksip.Message
 )

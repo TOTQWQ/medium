@@ -12,6 +12,7 @@ import (
 
 func main() {
 	sip.UDPListen()
+	// sip.TCPListen()
 	http.HandleFunc("/getMsg", func(w http.ResponseWriter, r *http.Request) {
 		request := pcksip.NewQueryRequest()
 		fmt.Println(global.Message.Method)
